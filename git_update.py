@@ -86,6 +86,7 @@ def _print_version():
 
 def _git_operations(args):
 
+    commands = []
     update_mode = 0
     # deal with pull request
     if args.pull:
@@ -93,14 +94,14 @@ def _git_operations(args):
             print('ERROR: Must define --origin/-o for git pull request')
             os._exit(0)
         else:
-            os.system('git pull origin {0}'.format(args.origin))
+            commands.append('git pull origin {0}'.format(args.origin))
 
     # deal with commit
     elif args.commit:
         if args.message is None:
             print('ERROR: Must define --message/-m for git commit')
         else:
-            os.system('git commit -m "{0}"'.format(args.message))
+            commands.append('git commit -m "{0}"'.format(args.message))
             update_mode = 2
 
     # deal with push request
@@ -109,14 +110,14 @@ def _git_operations(args):
             print('ERROR: Must define --origin/-o for git push request')
             os._exit(0)
         else:
-            os.system('git push origin {0}'.format(args.origin))
+            commands.append('git push origin {0}'.format(args.origin))
             if update_mode == 0:
                 update_mode = 1
 
     if args.debug > 0:
         update_mode = args.debug
 
-    return update_mode
+    return update_mode, commands
 
 
 def _update_version(args, update_mode):
@@ -186,9 +187,6 @@ def _update_version(args, update_mode):
 
     # commit this and push (if pushing)
     os.system('git add {0}'.format(__FILE__))
-    os.system('git commit -m "Update version and date"')
-    if update_mode == 1:
-        os.system('git push origin {0}'.format(args.origin))
 
 
 # =============================================================================
@@ -202,10 +200,14 @@ if __name__ == "__main__":
         _print_version()
         os._exit(1)
     # deal with push/pull/commit
-    updatemode = _git_operations(arguments)
+    updatemode, cmds = _git_operations(arguments)
     # deal with updating the version
     if updatemode > 0:
         _update_version(arguments, updatemode)
+    # run commands
+    for cmd in cmds:
+        os.system(cmd)
+    
 
 # =============================================================================
 # End of code
