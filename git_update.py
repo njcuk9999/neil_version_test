@@ -17,10 +17,10 @@ import os
 # =============================================================================
 # Define variables
 # =============================================================================
-VERSION = [0, 0, 1]
+VERSION = [1, 0, 0]
 DATE = "2020-05-25"
 __FILE__ = 'git_update.py'
-
+MAJOR_VERSION_DELTA_DAY = 1
 
 # =============================================================================
 # Define functions
@@ -167,7 +167,7 @@ def _update_version(args, update_mode):
     # set date
     lines[d_it] = '{0}"{1}"\n'.format(DATE_KEY, now.iso.split()[0])
     # set version
-    if now - datetime > 1:
+    if now - datetime > MAJOR_VERSION_DELTA_DAY:
         version[0] += 1
         version[1] = 0
         version[2] = 0
@@ -207,7 +207,7 @@ if __name__ == "__main__":
     # run commands
     for cmd in cmds:
         os.system(cmd)
-    
+
 
 # =============================================================================
 # End of code
