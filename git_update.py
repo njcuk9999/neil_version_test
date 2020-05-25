@@ -17,8 +17,8 @@ import os
 # =============================================================================
 # Define variables
 # =============================================================================
-VERSION = [0, 0, 1]
-DATE = "2020-05-01"
+VERSION = [1, 0, 0]
+DATE = "2020-05-25"
 __FILE__ = 'git_update.py'
 
 
@@ -49,20 +49,27 @@ def get_args():
                         default=None, help='git commit message')
     parser.add_argument('--version', '--info', action='store_true',
                         dest='version', help='Display version information')
-    parser.add_argument('--debug', actoin='store_true', dest='debug',
-                        default=False, help='Debugging (practise run)')
+    parser.add_argument('--debug', action='store', dest='debug',
+                        default=0, help='Debugging (practise run)',
+                        choices=['0', '1', '2'])
     # parse arguments
     args = parser.parse_args()
+
+    # convert debug
+    args.debug = int(args.debug)
+
     return args
 
 
-def get_version():
-    if len(VERSION) == 3:
-        return '{0}.{1}.{2}'.format(*VERSION)
-    elif len(VERSION) == 2:
-        return '{0}.{1}'.format(*VERSION)
+def get_version(version=None):
+    if version is None:
+        version = VERSION
+    if len(version) == 3:
+        return '{0}.{1}.{2}'.format(*version)
+    elif len(version) == 2:
+        return '{0}.{1}'.format(*version)
     else:
-        return str(VERSION)
+        return str(version)
 
 
 def print_version():
@@ -86,7 +93,7 @@ def git_operations(args):
         if args.message is None:
             print('ERROR: Must define --message/-m for git commit')
         else:
-            os.system('git commit -m {0}'.format(args.message))
+            os.system('git commit -m "{0}"'.format(args.message))
             update_mode = 2
 
     # deal with push request
@@ -98,8 +105,8 @@ def git_operations(args):
             os.system('git push origin {0}'.format(args.origin))
             update_mode = 1
 
-    if args.debug:
-        update_mode = 2
+    if args.debug > 0:
+        update_mode = args.debug
 
     return update_mode
 
@@ -149,9 +156,9 @@ def update_version(args, update_mode):
         os._exit(0)
 
     # set date
-    lines[d_it] = '{0}"{1}"'.format(DATE_KEY, datetime.iso.split()[0])
+    lines[d_it] = '{0}"{1}"\n'.format(DATE_KEY, now.iso.split()[0])
     # set version
-    if datetime - now > 1:
+    if now - datetime > 1:
         version[0] += 1
         version[1] = 0
         version[2] =0
@@ -160,14 +167,14 @@ def update_version(args, update_mode):
         version[2] = 0
     elif update_mode == 2:
         version[2] += 1
-    lines[v_it] = '{0}[{1}, {2}, {3}]'.format(VERSION_KEY, *version)
+    lines[v_it] = '{0}[{1}, {2}, {3}]\n'.format(VERSION_KEY, *version)
 
-    if args.debug:
-        print('Version  {0}-->[{1}, {2}, {3}]'.format(VERSION, *version))
-        print('Date {0}-->{1}'.format(DATE, datetime.iso.split()[0]))
-    else:
-        with open(__FILE__, 'w') as pyfile:
-            pyfile.writelines(lines)
+    vargs = [get_version(), get_version(version)]
+    print('Version  {0}-->{1}'.format(*vargs))
+    print('Date {0}-->{1}'.format(DATE, now.iso.split()[0]))
+
+    with open(__FILE__, 'w') as pyfile:
+        pyfile.writelines(lines)
 
 
 # =============================================================================
