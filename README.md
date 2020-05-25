@@ -2,6 +2,20 @@
 
 This is to update using `git pull`, `git push` and `git commit` with an auto incrementing version and date
 
+
+## accessing version
+
+To access version in a code:
+
+```
+import git_update
+
+version = git_update.get_version()
+date = git_uppdate.get_date()
+
+```
+
+
 ## Note: version = A.B.C
 
 - A is updated when date changes by 1 day or more
