@@ -25,7 +25,25 @@ __FILE__ = 'git_update.py'
 # =============================================================================
 # Define functions
 # =============================================================================
-def get_args():
+def get_version(version=None):
+    if version is None:
+        version = VERSION
+    if len(version) == 3:
+        return '{0}.{1}.{2}'.format(*version)
+    elif len(version) == 2:
+        return '{0}.{1}'.format(*version)
+    else:
+        return str(version)
+
+
+def get_date():
+    return str(DATE)
+
+
+# =============================================================================
+# Define private functions
+# =============================================================================
+def _get_args():
     # get parser
     description = ' Commit Pull Push and update version on commit/pull'
     parser = argparse.ArgumentParser(description=description)
@@ -61,23 +79,12 @@ def get_args():
     return args
 
 
-def get_version(version=None):
-    if version is None:
-        version = VERSION
-    if len(version) == 3:
-        return '{0}.{1}.{2}'.format(*version)
-    elif len(version) == 2:
-        return '{0}.{1}'.format(*version)
-    else:
-        return str(version)
-
-
-def print_version():
+def _print_version():
     print('CURRENT VERSION: {0}'.format(get_version()))
     print('CURRENT DATE: {0}'.format(DATE))
 
 
-def git_operations(args):
+def _git_operations(args):
 
     update_mode = 0
     # deal with pull request
@@ -97,13 +104,14 @@ def git_operations(args):
             update_mode = 2
 
     # deal with push request
-    elif args.push:
+    if args.push:
         if args.origin is None:
             print('ERROR: Must define --origin/-o for git push request')
             os._exit(0)
         else:
             os.system('git push origin {0}'.format(args.origin))
-            update_mode = 1
+            if update_mode == 0:
+                update_mode = 1
 
     if args.debug > 0:
         update_mode = args.debug
@@ -111,7 +119,7 @@ def git_operations(args):
     return update_mode
 
 
-def update_version(args, update_mode):
+def _update_version(args, update_mode):
     # get time now
     now = Time.now()
     # get current version
@@ -161,7 +169,7 @@ def update_version(args, update_mode):
     if now - datetime > 1:
         version[0] += 1
         version[1] = 0
-        version[2] =0
+        version[2] = 0
     elif update_mode == 1:
         version[1] += 1
         version[2] = 0
@@ -176,24 +184,28 @@ def update_version(args, update_mode):
     with open(__FILE__, 'w') as pyfile:
         pyfile.writelines(lines)
 
+    # commit this and push (if pushing)
+    os.system('git add {0}'.format(__FILE__))
+    os.system('git commit -m "Update version and date"')
+    if update_mode == 1:
+        os.system('git push origin {0}'.format(args.origin))
+
 
 # =============================================================================
 # Start of code
 # =============================================================================
 if __name__ == "__main__":
     # get arguments
-    args = get_args()
+    arguments = _get_args()
     # deal with version
-    if args.version:
-        print_version()
+    if arguments.version:
+        _print_version()
         os._exit(1)
     # deal with push/pull/commit
-    update = git_operations(args)
+    updatemode = _git_operations(arguments)
     # deal with updating the version
-    if update > 0:
-        update_version(args, update)
-
-
+    if updatemode > 0:
+        _update_version(arguments, updatemode)
 
 # =============================================================================
 # End of code
